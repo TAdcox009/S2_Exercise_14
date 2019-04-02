@@ -50,14 +50,52 @@ function makeOutline() {
 function createList(source, outlineList) {
       // Headings for the outline.
       var headings = ["H1", "H2", "H3", "H4", "H5", "H6"];
+      // previous level of the heading
+      var preLevel = 0;
+      //running total of the article heading 
+      var headNum = 0;
+
       // Loops through all of the child nodes of source article until no child nodes are left.
       for (var n = source.firstChild; n !== null; n = n.nextSibling) {
             var headLevel = headings.indexOf(n.nodeName);
 
             if (headLevel !== -1) {
+                  // add an id to the heading if it is missing
+                  headNum++;
+                  if (n.hasAttribute("id") === false) {
+                        n.setAttribute("id", "head" + headNum);
+                  }
                   var listElem = document.createElement("li");
-                  listElem.innerHTML = n.firstChild.nodeValue;
-                  outlineList.appendChild(listElem);
+                  // create hypertext links to the document headings
+                  var linkElem = document.createElement("a");
+                  linkElem.innerHTML = n.innerHTML;
+                  linkElem.setAttribute("href", "#" + n.id);
+
+                  // append the hypertext link to the current list item
+                  listElem.appendChild(linkElem);
+                  if (headLevel === preLevel) {
+                        // append the list item to the current list
+                        outlineList.appendChild(listElem);
+                  } else if (headLevel > preLevel) {
+                        // start a new nested list
+                        var nestedList = document.createElement("ol");
+                        nestedList.appendChild(listElem);
+                        //append nested list to last item in the current list
+                        outlineList.lastChild.appendChild(nestedList);
+                        // change the current list to the nested list
+                        outlineList = nestedList;
+                  } else {
+                        // append the list item to a higher list
+                        //calculate the difference between the current and previous level
+                        var levelUp = preLevel - headLevel;
+                        // go up to a higher level
+                        for (var i = 1; i <= levelUp; i++) {
+                              outlineList = outlineList.parentNode.parentNode;
+                        }
+                        outlineList.appendChild(listElem);
+                  }
+                  // update the value of prevLevel
+                  preLevel = headLevel;
             }
       }
 }
